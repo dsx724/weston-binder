@@ -28,6 +28,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include <libweston/version.h>
+
 /**
  * Much like system(3) but doesn't wait for exit and outputs to /dev/null.
  */
@@ -110,9 +112,14 @@ binder_parse_combination(const char *combo, uint32_t *key,
 	return 0;
 }
 
+struct binder_data {
+	char *exec;
+	struct weston_compositor *ec;
+};
+
 struct binder_process {
 	struct weston_process wp;
-	const char *exec;
+	struct binder_data *data;
 };
 
 void
@@ -122,7 +129,7 @@ process_cleanup(struct weston_process *process, int status)
 
 	if (status) {
 		weston_log("Process executed via keybind failed (exit value %i): %s\n",
-				status, bp->exec);
+				status, bp->data->exec);
 	}
 
 	free(process);
@@ -132,18 +139,23 @@ static void
 binder_callback(struct weston_keyboard *keyboard, const struct timespec *time,
 		uint32_t key, void *data)
 {
-	pid_t spawn = system_nowait("sh", (char * const[]) {"sh", "-c", data, NULL});
+	struct binder_data *bd = (struct binder_data *) data;
+	pid_t spawn = system_nowait("sh", (char * const[]) {"sh", "-c", bd->exec, NULL});
 	if (spawn == -1) {
 		weston_log("Failed spawning process %s\n", (char *) data);
 		return;
 	}
 
 	struct binder_process *bp = malloc(sizeof(*bp));
+	bp->data = bd;
 	bp->wp.pid = spawn;
 	bp->wp.cleanup = process_cleanup;
 
-	bp->exec = (char *) data;
+#if WESTON_VERSION_MAJOR >= 10
+	wet_watch_process(bd->ec, &bp->wp);
+#else
 	weston_watch_process(&bp->wp);
+#endif
 }
 
 static void
@@ -178,8 +190,11 @@ binder_add_bindings(struct weston_compositor *ec)
 			continue;
 		}
 
+		struct binder_data *bd = malloc(sizeof(*bd));
+		bd->exec = exec;
+		bd->ec = ec;
 		weston_log("Adding keybind %s -> %s\n", key, exec);
-		weston_compositor_add_key_binding(ec, k, m, binder_callback, exec);
+		weston_compositor_add_key_binding(ec, k, m, binder_callback, bd);
 		free(key);
 	}
 }
