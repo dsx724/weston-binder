@@ -142,7 +142,7 @@ binder_callback(struct weston_keyboard *keyboard, const struct timespec *time,
 	struct binder_data *bd = (struct binder_data *) data;
 	pid_t spawn = system_nowait("sh", (char * const[]) {"sh", "-c", bd->exec, NULL});
 	if (spawn == -1) {
-		weston_log("Failed spawning process %s\n", (char *) data);
+		weston_log("Failed spawning process %s\n", (char *) bd->exec);
 		return;
 	}
 
