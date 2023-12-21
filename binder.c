@@ -113,7 +113,7 @@ binder_parse_combination(const char *combo, uint32_t *key,
 	*mod = m;
 	return 0;
 }
-#if WESTON_VERSION_MAJOR >=13
+
 struct wet_compositor {
 	struct weston_compositor *compositor;
 	struct weston_config *config;
@@ -129,7 +129,7 @@ struct wet_compositor {
 	bool use_color_manager;
 	struct wl_listener screenshot_auth;
 };
-#endif
+
 struct binder_data {
 	char *exec;
 	struct weston_compositor *ec;
@@ -137,7 +137,6 @@ struct binder_data {
 
 struct binder_process {
 
-#if WESTON_VERSION_MAJOR >= 13
 	struct wet_process wp;
 	struct binder_data *data;
 };
@@ -146,17 +145,6 @@ void
 process_cleanup(struct wet_process *process, int status,void *data)
 {
 	struct binder_process *bp = (struct binder_process *) process;
-#else
-	struct weston_process wp;
-	struct binder_data *data;
-};
-
-void
-process_cleanup(struct weston_process *process, int status)
-{
-	struct binder_process *bp = (struct binder_process *) process;
-#endif
-
 	if (status) {
 		weston_log("Process executed via keybind failed (exit value %i): %s\n",
 				status, bp->data->exec);
@@ -180,14 +168,8 @@ binder_callback(struct weston_keyboard *keyboard, const struct timespec *time,
 	bp->data = bd;
 	bp->wp.pid = spawn;
 	bp->wp.cleanup = process_cleanup;
-#if WESTON_VERSION_MAJOR >= 13
 	struct wet_compositor *wet = weston_compositor_get_user_data(bd->ec);
 	wl_list_insert(&wet->child_process_list,&bp->wp.link);
-#elif WESTON_VERSION_MAJOR >= 10
-	wet_watch_process(bd->ec, &bp->wp);
-#else
-	weston_watch_process(&bp->wp);
-#endif
 }
 
 static void
