@@ -39,7 +39,7 @@
  */
 static int
 binder_parse_combination(const char *combo, uint32_t *key,
-		enum weston_keyboard_modifier *mod)
+enum weston_keyboard_modifier *mod)
 {
 	uint32_t k = 0;
 	enum weston_keyboard_modifier m = 0;
@@ -78,7 +78,6 @@ binder_parse_combination(const char *combo, uint32_t *key,
 		} else if ((code = libevdev_event_code_from_name(EV_KEY, keysym))) {
 			if (code == -1 || k != 0)
 				return -1;
-
 			k = code;
 		} else  {
 			return -1;
@@ -97,7 +96,6 @@ struct binder_data {
 };
 
 struct binder_process {
-
 	struct wet_process wp;
 	struct binder_data *data;
 };
@@ -115,7 +113,6 @@ binder_callback(struct weston_keyboard *keyboard, const struct timespec *time,
 		weston_log("Failed starting process %s\n", (char *) bd->exec);
 	}
 	return;
-
 }
 
 static void
@@ -155,7 +152,6 @@ binder_add_bindings(struct weston_compositor *ec)
 		bd->ec = ec;
 		weston_log("Adding keybind %s -> %s\n", key, exec);
 		weston_compositor_add_key_binding(ec, k, m, binder_callback, bd);
-		binder_callback(NULL, NULL, k, bd);
 		free(key);
 	}
 }
