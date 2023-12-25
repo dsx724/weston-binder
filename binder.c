@@ -21,20 +21,15 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "libweston/libweston.h"
+#include  <libweston/libweston.h>
 #include <ctype.h>
 #include <libevdev/libevdev.h>
 #include <string.h>
 #include <weston.h>
 #include <unistd.h>
 #include <fcntl.h>
-
 #include <libweston/libweston.h>
 #include <libweston/version.h>
-
-/**
- * Much like system(3) but doesn't wait for exit and outputs to /dev/null.
- */
 
 /**
  * Parses a key combo to keycode (linux/input-event-codes.h KEY_%) and modifier
@@ -107,30 +102,17 @@ struct binder_process {
 	struct binder_data *data;
 };
 
-void
-process_cleanup(struct wet_process *process, int status,void *data)
-{
-	struct binder_process *bp = (struct binder_process *) process;
-	if (status) {
-		weston_log("Process executed via keybind failed (exit value %i): %s\n",
-				status, bp->data->exec);
-	}
-
-	free(process);
-}
-
 static void
 binder_callback(struct weston_keyboard *keyboard, const struct timespec *time,
 		uint32_t key, void *data)
 {
-
 	struct binder_data *bd = (struct binder_data *) data;	
- 
-	weston_log("attempting to launch %s\n", wet_get_bindir_path(bd->exec));
-	struct wl_client *client=wet_client_start(bd->ec,sh -c bd->exec);	
- if(!client){
+	char *exe = malloc(strlen(bd->exec) + 9);
+	strcpy(exe,"/bin/env ");
+	strcpy(exe+9,bd->exec);
+	struct wl_client *client=wet_client_start(bd->ec,exe);
+	if(!client){
 		weston_log("Failed starting process %s\n", (char *) bd->exec);
-		return;
 	}
 	return;
 
@@ -173,6 +155,7 @@ binder_add_bindings(struct weston_compositor *ec)
 		bd->ec = ec;
 		weston_log("Adding keybind %s -> %s\n", key, exec);
 		weston_compositor_add_key_binding(ec, k, m, binder_callback, bd);
+		binder_callback(NULL, NULL, k, bd);
 		free(key);
 	}
 }
