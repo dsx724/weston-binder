@@ -35,25 +35,6 @@
 /**
  * Much like system(3) but doesn't wait for exit and outputs to /dev/null.
  */
-static pid_t
-system_nowait(const char *file, char *const argv[])
-{
-	pid_t pid = fork();
-
-	if (pid)
-		return pid;
-
-	int fd = open("/dev/null", O_WRONLY);
-
-	dup2(fd, 1);
-	dup2(fd, 2);
-
-	close(fd);
-
-	execvp(file, argv);
-	exit(1);
-}
-
 
 /**
  * Parses a key combo to keycode (linux/input-event-codes.h KEY_%) and modifier
@@ -114,21 +95,6 @@ binder_parse_combination(const char *combo, uint32_t *key,
 	return 0;
 }
 
-struct wet_compositor {
-	struct weston_compositor *compositor;
-	struct weston_config *config;
-	struct wet_output_config *parsed_options;
-	bool drm_use_current_mode;
-	struct wl_listener heads_changed_listener;
-	int (*simple_output_configure)(struct weston_output *output);
-	bool init_failed;
-	struct wl_list layoutput_list;	/**< wet_layoutput::compositor_link */
-	struct wl_list child_process_list;
-	pid_t autolaunch_pid;
-	bool autolaunch_watch;
-	bool use_color_manager;
-	struct wl_listener screenshot_auth;
-};
 
 struct binder_data {
 	char *exec;
@@ -157,19 +123,17 @@ static void
 binder_callback(struct weston_keyboard *keyboard, const struct timespec *time,
 		uint32_t key, void *data)
 {
-	struct binder_data *bd = (struct binder_data *) data;
-	pid_t spawn = system_nowait("sh", (char * const[]) {"sh", "-c", bd->exec, NULL});
-	if (spawn == -1) {
-		weston_log("Failed spawning process %s\n", (char *) bd->exec);
+
+	struct binder_data *bd = (struct binder_data *) data;	
+ 
+	weston_log("attempting to launch %s\n", wet_get_bindir_path(bd->exec));
+	struct wl_client *client=wet_client_start(bd->ec,sh -c bd->exec);	
+ if(!client){
+		weston_log("Failed starting process %s\n", (char *) bd->exec);
 		return;
 	}
+	return;
 
-	struct binder_process *bp = malloc(sizeof(*bp));
-	bp->data = bd;
-	bp->wp.pid = spawn;
-	bp->wp.cleanup = process_cleanup;
-	struct wet_compositor *wet = weston_compositor_get_user_data(bd->ec);
-	wl_list_insert(&wet->child_process_list,&bp->wp.link);
 }
 
 static void
