@@ -1,5 +1,5 @@
 
-WESTON_MODPREFIX=$(shell pkg-config --variable=libdir weston)/weston
+WESTON_MODPREFIX=$(shell pkg-config --variable=libexecdir weston)
 WESTON_VERSION=$(shell pkg-config --modversion weston | cut -d '.' -f 1)
 
 LIBWESTON_MOD=libweston-$(WESTON_VERSION)
