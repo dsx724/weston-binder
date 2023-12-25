@@ -23,7 +23,7 @@ clean:
 	rm -f binder.so
 
 install:
-	install -m 755 binder.so $(WESTON_MODPREFIX)
+	sudo install -m 755 binder.so $(WESTON_MODPREFIX)
 
 uninstall:
-	rm -f $(WESTON_MODPREFIX)/binder.so
+	sudo rm -f $(WESTON_MODPREFIX)/binder.so
