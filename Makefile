@@ -1,29 +1,26 @@
+PREFIX ?= /usr
+LIBDIR = $(PREFIX)/lib
+MODULEDIR = $(LIBDIR)/weston
 
-WESTON_MODPREFIX=$(shell pkg-config --variable=libexecdir weston)
-WESTON_VERSION=$(shell pkg-config --modversion weston | cut -d '.' -f 1)
+CFLAGS :=$(CFLAGS) \
+	$(shell pkg-config --cflags weston) \
+	$(shell pkg-config --cflags libevdev)
 
-LIBWESTON_MOD=libweston-$(WESTON_VERSION)
-LIBWESTON_LIBPREFIX=$(shell pkg-config --variable=libdir $(LIBWESTON_MOD))
-
-CFLAGS :=$(CFLAGS)\
-	$(shell pkg-config --cflags weston $(LIBWESTON_MOD)) \
-	$(shell pkg-config --cflags libevdev) \
-	 -fPIC -Wall
-
-LDFLAGS:=$(LDFLAGS) -shared $(shell pkg-config --libs $(LIBWESTON_MOD))
+LDFLAGS :=$(LDFLAGS) -shared -lweston-14
 
 .PHONY: all clean install uninstall
 
 all: binder.so
 
-binder.so: binder.c Makefile $(LIBWESTON_LIBPREFIX)/$(LIBWESTON_MOD).so
-	${CC} ${CFLAGS} $< ${LDFLAGS} -o $@
+binder.so: binder.o
+	$(CC) $(LDFLAGS) -o $@ $^
+
+binder.o: binder.c
+	$(CC) $(CFLAGS) -c $<
 
 clean:
-	rm -f binder.so
+	rm -f binder.so binder.o
 
-install:
-	install -m 755 binder.so $(WESTON_MODPREFIX)
-
-uninstall:
-	rm -f $(WESTON_MODPREFIX)/binder.so
+install: all
+	install -d $(DESTDIR)$(MODULEDIR)
+	install -m 0644 binder.so $(DESTDIR)$(MODULEDIR)
