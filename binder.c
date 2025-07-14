@@ -21,11 +21,10 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include  <libweston/libweston.h>
 #include <ctype.h>
 #include <libevdev/libevdev.h>
 #include <string.h>
-#include <weston.h>
+#include <weston/weston.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <libweston/libweston.h>
