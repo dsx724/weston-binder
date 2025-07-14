@@ -57,18 +57,18 @@ Examples
 --------
 Here's a few useful examples:
 
-	# wireplumber sound controls
+	# PulseAudio sound controls
 	[keybind]
 	key=mute
-	exec=wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+	exec=pamixer -t
 
 	[keybind]
 	key=volumeup
-	exec=wpctl set-volume @DEFAULT_AUDIO_SINK@ 10%+
+	exec=pamixer -i 10
 
 	[keybind]
 	key=volumedown
-	exec=wpctl set-volume @DEFAULT_AUDIO_SINK@ 10%-
+	exec=pamixer -d 10
 
 	# Music Player Daemon controls
 	[keybind]
